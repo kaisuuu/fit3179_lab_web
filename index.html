@@ -9,50 +9,88 @@
 <div id="vis"></div>
 <script type="text/javascript">
     var spec = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-        "title": "Global Airport Activity",
-        "width": 800,
-        "height": 500,
-        "layer": [
-            {
-                "data": {
-                    "url": "https://raw.githubusercontent.com/FIT3179/Vega-Lite/main/3_choropleth_map/js/ne_110m_admin_0_countries.topojson",
-                    "format": {"type": "topojson", "feature": "ne_110m_admin_0_countries"}
-                },
-                "projection": {"type": "equalEarth"},
-                "mark": {"type": "geoshape", "fill": "lightgray", "stroke": "white"},
-                "encoding": {
-                    "tooltip": {"field": "properties.NAME", "type": "nominal", "title": "Country"}
-                }
-            },
-            {
-                "data": {"url": "https://raw.githubusercontent.com/kaisuuu/3179/main/Airline%20Dataset1.csv"},
-                "transform": [
-                    {"aggregate": [{"op": "count", "as": "busyness"}], "groupby": ["Airport_Country_Code"]},
-                    {
-                        "lookup": "Airport_Country_Code",
-                        "from": {
-                            "data": {"url": "https://raw.githubusercontent.com/FIT3179/Vega-Lite/main/3_choropleth_map/data/countryInfo.csv"},
-                            "key": "country",
-                            "fields": ["latitude", "longitude", "name"]
-                        }
-                    }
-                ],
-                "mark": "circle",
-                "encoding": {
-                    "longitude": {"field": "longitude", "type": "quantitative"},
-                    "latitude": {"field": "latitude", "type": "quantitative"},
-                    "size": {"field": "busyness", "type": "quantitative", "legend": {"title": "Airport Busyness", "orient": "top-left"}},
-                    "color": {"field": "busyness", "type": "quantitative", "scale": {"scheme": "reds"}, "legend": {"title": "Busyness Level", "orient": "bottom-right"}},
-                    "tooltip": [
-                        {"field": "name", "type": "nominal", "title": "Country"},
-                        {"field": "busyness", "type": "quantitative", "title": "Airport Busyness"}
-                    ]
-                }
-            }
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "width": 800,
+  "height": 600,
+  "title": "Global Airport Activity",
+  "data": {
+    "url": "https://raw.githubusercontent.com/kaisuuu/3179/main/Airline%20Dataset1.csv"
+  },
+  "params": [
+    {
+      "name": "Adjusted_Passenger_Count_Above",
+      "value": 0,
+      "bind": {
+        "input": "range",
+        "min": 0,
+        "max": 10000,
+        "step": 1000,
+        "name": "Minimum Adjusted Passenger Count: "
+      }
+    },
+    {
+      "name": "Airport_Continent_Selection",
+      "bind": {
+        "input": "select",
+        "options": [
+          null,
+          "AF",
+          "AS",
+          "EU",
+          "NAM",
+          "OC",
+          "SAM"
         ],
-        "config": {"view": {"stroke": "transparent"}}
-    };
+        "labels": [
+          "Show All",
+          "AF",
+          "AS",
+          "EU",
+          "NAM",
+          "OC",
+          "SAM"
+        ],
+        "name": "Continent Selection: "
+      }
+    }
+  ],
+  "transform": [
+    {"filter": "datum.Adjusted_Passenger_Count > Adjusted_Passenger_Count_Above"},
+    {
+      "filter": "Airport_Continent_Selection == null || datum.Airport_Continent == Airport_Continent_Selection"
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "Longitude",
+      "type": "quantitative",
+      "title": "Longitude"
+    },
+    "y": {
+      "field": "Latitude",
+      "type": "quantitative",
+      "title": "Latitude"
+    },
+    "size": {
+      "field": "Adjusted_Passenger_Count",
+      "type": "quantitative",
+      "title": "Adjusted Passenger Count",
+      "scale": {"type": "log"}
+    },
+    "color": {
+      "field": "Airport_Continent",
+      "type": "nominal",
+      "title": "Airport Continent"
+    },
+    "tooltip": [
+      {"field": "Name", "type": "nominal", "title": "Airport Name"},
+      {"field": "Adjusted_Passenger_Count", "type": "quantitative", "title": "Adjusted Passenger Count", "format": ","},
+      {"field": "Country_Name", "type": "nominal", "title": "Country"},
+      {"field": "Airport_Country_Code", "type": "nominal", "title": "Country Code"}
+    ]
+  },
+  "mark": "circle"
+};
     vegaEmbed('#vis', spec).then(function (result) {
     }).catch(console.error);
 </script>
